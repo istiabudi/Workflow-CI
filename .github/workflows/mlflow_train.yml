@@ -19,22 +19,52 @@ jobs:
         with:
           python-version: "3.12.7"
 
+      - name: Cache pip dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('MLproject/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Check project files
+        run: |
+          ls -R MLproject
+
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r MLproject/requirements.txt
+          pip list
 
       - name: Run MLflow project
         run: |
           cd MLproject
-          mlflow run . -P data_path=energy_preprocessed.csv -P n_estimators=100 > mlflow_output.txt 2>&1
+          mlflow run . -P data_path=energy_preprocessed.csv -P n_estimators=100 2>&1 | tee mlflow_output.txt
+          if [ $? -ne 0 ]; then
+            echo "MLflow run gagal. Periksa output di atas."
+            cat mlflow_output.txt
+            exit 1
+          fi
 
       - name: Get latest MLflow run_id
         id: get_run_id
         run: |
-          run_id=$(grep -oP '(?<=Run ID: )\w+' mlflow_output.txt)
+          if ! grep -q "Run ID:" MLproject/mlflow_output.txt; then
+            echo "Run ID tidak ditemukan di mlflow_output.txt"
+            cat MLproject/mlflow_output.txt
+            exit 1
+          fi
+          run_id=$(grep -oP '(?<=Run ID: )\w+' MLproject/mlflow_output.txt)
           echo "Run ID ditemukan: $run_id"
           echo "run_id=$run_id" >> "$GITHUB_OUTPUT"
 
       - name: Show latest run_id
         run: echo "Latest MLflow run ID adalah ${{ steps.get_run_id.outputs.run_id }}"
+
+      - name: Upload MLflow output
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: mlflow-output
+          path: MLproject/mlflow_output.txt
