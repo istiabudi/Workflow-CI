@@ -7,4 +7,4 @@ entry_points:
     parameters:
       data_path: {type: str, default: "energy_preprocessed.csv"}
       n_estimators: {type: int, default: 100}
-    command: "python modelling.py --data_path {data_path} --n_estimators {n_estimators}"
+    command: "python modeling.py --data_path {data_path} --n_estimators {n_estimators}"
