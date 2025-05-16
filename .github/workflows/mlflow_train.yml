@@ -1,70 +1,48 @@
-name: Train MLflow Project
+name: CI/CD Flow
 
 on:
   push:
     branches:
       - main
-  workflow_dispatch:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  CSV_URL: "energy_preprocessed.csv"
+  TARGET_VAR: "EnergyConsumption"
 
 jobs:
-  mlflow-train:
+  continuous-integration:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
+          - name: Run actions/checkout@v3
+            uses: actions/checkout@v3
 
-      - name: Setup Python 3.12.7
-        uses: actions/setup-python@v4
-        with:
-          python-version: "3.12.7"
+          - name: Set up Python 3.12.7
+            uses: actions/setup-python@v4
+            with:
+              python-version: "3.12.7"
 
-      - name: Cache pip dependencies
-        uses: actions/cache@v3
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('MLproject/requirements.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
+          - name: Check Env
+            run: |
+              echo $CSV_URL
 
-      - name: Check project files
-        run: |
-          ls -R MLproject
+          - name: Install Dependencies
+            run: |
+              python -m pip install --upgrade pip
+              pip install mlflow seaborn matplotlib scikit-learn pandas numpy
 
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r MLproject/requirements.txt
-          pip list
+          - name: Run MLFlow Project
+            run: |
+              mlflow run MLProject --env-manager=local
 
-      - name: Run MLflow project
-        run: |
-          cd MLproject
-          mlflow run . -P data_path=energy_preprocessed.csv -P n_estimators=100 2>&1 | tee mlflow_output.txt
-          if [ $? -ne 0 ]; then
-            echo "MLflow run gagal. Periksa output di atas."
-            cat mlflow_output.txt
-            exit 1
-          fi
-
-      - name: Get latest MLflow run_id
-        id: get_run_id
-        run: |
-          if ! grep -q "Run ID:" MLproject/mlflow_output.txt; then
-            echo "Run ID tidak ditemukan di mlflow_output.txt"
-            cat MLproject/mlflow_output.txt
-            exit 1
-          fi
-          run_id=$(grep -oP '(?<=Run ID: )\w+' MLproject/mlflow_output.txt)
-          echo "Run ID ditemukan: $run_id"
-          echo "run_id=$run_id" >> "$GITHUB_OUTPUT"
-
-      - name: Show latest run_id
-        run: echo "Latest MLflow run ID adalah ${{ steps.get_run_id.outputs.run_id }}"
-
-      - name: Upload MLflow output
-        if: always()
-        uses: actions/upload-artifact@v3
-        with:
-          name: mlflow-output
-          path: MLproject/mlflow_output.txt
+          - name: Get latest MLFlow run_id
+            run: |
+              RUN_ID=$(ls -td mlruns/0/*/ | head -n 1 | cut -d'/' -f3)
+              echo "RUN_ID=$RUN_ID" >> $GITHUB_ENV
+              echo "Latest run_id: $RUN_ID"
