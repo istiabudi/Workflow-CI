@@ -22,7 +22,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          run: conda env create -f MLProject/conda.yaml
+          conda env create -f MLProject/conda.yaml
 
       - name: Run MLflow project
         run: |
