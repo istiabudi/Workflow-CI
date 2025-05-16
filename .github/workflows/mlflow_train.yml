@@ -11,13 +11,13 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Set up job
+      - name: Checkout repository
         uses: actions/checkout@v3
 
       - name: Setup Python 3.12.7
         uses: actions/setup-python@v4
         with:
-          python-version: 3.12.7
+          python-version: "3.12.7"
 
       - name: Install dependencies
         run: |
@@ -33,10 +33,9 @@ jobs:
       - name: Get latest MLflow run_id
         id: get_run_id
         run: |
-          # Ambil run_id dari output file
           run_id=$(grep -oP '(?<=Run ID: )\w+' mlflow_output.txt)
           echo "Run ID ditemukan: $run_id"
-          echo "::set-output name=run_id::$run_id"
+          echo "run_id=$run_id" >> "$GITHUB_OUTPUT"
 
       - name: Show latest run_id
         run: echo "Latest MLflow run ID adalah ${{ steps.get_run_id.outputs.run_id }}"
