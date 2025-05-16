@@ -1,5 +1,6 @@
 import os
 import mlflow
+import mlflow.sklearn
 import argparse
 import pandas as pd
 from sklearn.ensemble import RandomForestRegressor
@@ -9,21 +10,26 @@ from sklearn.model_selection import train_test_split
 def main(data_path, n_estimators):
     print("Script mulai dieksekusi...")
 
+    # Set tracking server dan experiment
     mlflow.set_tracking_uri("http://127.0.0.1:5000/")  
     mlflow.set_experiment("Energy Consumption Predictions")
 
+    # Cek file data
     if not os.path.exists(data_path):
         raise FileNotFoundError(f"File tidak ditemukan: {data_path}")
 
+    # Load data
     data = pd.read_csv(data_path)
 
     target_column = 'EnergyConsumption'
     X = data.drop(columns=[target_column])
     y = data[target_column]
 
+    # Split data
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-    with mlflow.start_run():
+    # Mulai run mlflow dengan nested=True supaya gak bentrok run utama
+    with mlflow.start_run(nested=True):
         model = RandomForestRegressor(n_estimators=n_estimators, random_state=42)
         model.fit(X_train, y_train)
 
