@@ -1,0 +1,41 @@
+name: Train MLflow Project
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  mlflow-train:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup Python 3.12.7
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.12.7"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install mlflow==2.22.0 cloudpickle==3.1.1 numpy==2.2.5 pandas==2.2.3 scikit-learn==1.6.1 scipy==1.15.2
+
+      - name: Run MLflow project
+        run: |
+          mlflow run ./MLProject \
+            -P data_path=MLProject/energy_preprocessed.csv \
+            -P n_estimators=100 > mlflow_output.txt
+
+      - name: Get latest MLflow run_id
+        id: get_run_id
+        run: |
+          run_id=$(grep -oP '(?<=Run ID: )\w+' mlflow_output.txt)
+          echo "Run ID ditemukan: $run_id"
+          echo "run_id=$run_id" >> "$GITHUB_OUTPUT"
+
+      - name: Show latest run_id
+        run: echo "Latest MLflow run ID adalah ${{ steps.get_run_id.outputs.run_id }}"
