@@ -26,6 +26,7 @@ jobs:
 
       - name: Run MLflow project
         run: |
+          cd MLproject
           mlflow run . -P data_path=energy_preprocessed.csv -P n_estimators=100 > mlflow_output.txt 2>&1
 
       - name: Get latest MLflow run_id
