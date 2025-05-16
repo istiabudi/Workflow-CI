@@ -10,8 +10,7 @@ from sklearn.model_selection import train_test_split
 def main(data_path, n_estimators):
     print("Script mulai dieksekusi...")
 
-    # Set tracking server dan experiment
-    # mlflow.set_tracking_uri("http://127.0.0.1:5000/")  
+    mlflow.set_tracking_uri("http://127.0.0.1:5000/")  
     mlflow.set_experiment("Energy Consumption Predictions")
 
     # Cek file data
