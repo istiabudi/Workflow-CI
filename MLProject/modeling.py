@@ -14,7 +14,7 @@ args = parser.parse_args()
 
 # mlflow.set_tracking_uri("http://127.0.0.1:5000") 
 mlflow.set_experiment("Energy Consumption Predictions")
-mflow.sklearn.autolog()
+mlflow.sklearn.autolog()
 
 with mlflow.start_run() as run:
     print(f"Running with run_id: {run.info.run_id}")
