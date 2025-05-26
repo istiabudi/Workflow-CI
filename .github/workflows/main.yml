@@ -13,7 +13,7 @@ permissions:
   packages: write
 
 env:
-  CSV_URL: "energy_preprocessed.csv"
+  CSV_URL: "MLProject/energy_preprocessed.csv"
   TARGET_VAR: "EnergyConsumption"
 
 jobs:
