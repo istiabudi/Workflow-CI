@@ -1,0 +1,11 @@
+name: energy-prediction
+
+conda_env: conda.yaml
+
+entry_points:
+  main:
+    parameters:
+      csv_url: {type: str, default: "energy_preprocessed.csv"}
+      target_var: {type: str, default: "EnergyConsumption"}
+    command: >
+      python modeling.py --csv_url {csv_url} --target_var {target_var}
