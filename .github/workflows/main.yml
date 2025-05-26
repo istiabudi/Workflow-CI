@@ -1,0 +1,48 @@
+name: CI/CD Flow
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  CSV_URL: "energy_preprocessed.csv"
+  TARGET_VAR: "EnergyConsumption"
+
+jobs:
+  continuous-integration:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python 3.12.7
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.12.7
+
+      - name: Check Python version and environment
+        run: |
+          python --version
+          pip --version
+
+      - name: Install dependencies
+        run: |
+          pip install mlflow pandas numpy scikit-learn
+
+      - name: Run MLflow Project
+        run: |
+          mlflow run ./MLProject -P csv_url=${{ env.CSV_URL }} -P target_var=${{ env.TARGET_VAR }}
+
+      - name: Get latest MLflow run_id
+        run: |
+          echo "Getting latest MLflow run..."
+          RUN_ID=$(mlflow runs list --experiment-name "Energy Consumption Predictions" | awk 'NR==2{print $1}')
+          echo "Last run_id: $RUN_ID"
